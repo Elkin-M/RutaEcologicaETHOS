@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "685079502911",
+    "firebase_url": "https://rutaecologicaethos-default-rtdb.firebaseio.com",
+    "project_id": "rutaecologicaethos",
+    "storage_bucket": "rutaecologicaethos.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:685079502911:android:17130c707eafca522a588a",
+        "android_client_info": {
+          "package_name": "com.ethos.rutaecologica"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAURD8lYdjOmuh4S_zXIo2bYBKqmTu0rLw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

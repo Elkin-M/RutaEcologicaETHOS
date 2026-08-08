@@ -1,0 +1,43 @@
+{
+  "RutaEcologica": {
+    "Lugares": {
+      "MANG001": {
+        "id": "MANG001",
+        "nombre": "Manglar Principal",
+        "descripcion": "Los manglares son ecosistemas que protegen la costa, albergan cientos de especies y ayudan a mantener limpia el agua.",
+        "categoria": "Ecosistema Costero",
+        "estrellas": 5,
+        "audio": "https://firebasestorage.googleapis.com/CAMBIA_ESTA_URL/manglar_principal.mp3",
+        "imagen": "https://firebasestorage.googleapis.com/CAMBIA_ESTA_URL/manglar_principal.png",
+        "latitud": 10.391000,
+        "longitud": -75.479000
+      },
+      "MANG002": {
+        "id": "MANG002",
+        "nombre": "Zona de Reciclaje",
+        "descripcion": "Aquí se clasifican correctamente los residuos para facilitar su reciclaje.",
+        "categoria": "Gestión de Residuos",
+        "estrellas": 5,
+        "audio": "https://firebasestorage.googleapis.com/CAMBIA_ESTA_URL/reciclaje.mp3",
+        "imagen": "https://firebasestorage.googleapis.com/CAMBIA_ESTA_URL/reciclaje.png",
+        "latitud": 10.391500,
+        "longitud": -75.479500
+      },
+      "MANG003": {
+        "id": "MANG003",
+        "nombre": "Huerta Escolar",
+        "descripcion": "La huerta escolar fomenta la agricultura sostenible y el cuidado del medio ambiente.",
+        "categoria": "Agricultura Sostenible",
+        "estrellas": 5,
+        "audio": "https://firebasestorage.googleapis.com/CAMBIA_ESTA_URL/huerta.mp3",
+        "imagen": "https://firebasestorage.googleapis.com/CAMBIA_ESTA_URL/huerta.png",
+        "latitud": 10.392000,
+        "longitud": -75.480000
+      }
+    },
+    "configuracion": {
+      "version": "1.0",
+      "nombreProyecto": "Ruta Ecologica ETHOS"
+    }
+  }
+}
