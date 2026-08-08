@@ -1,6 +1,5 @@
 package com.ethos.rutaecologica.ui.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
@@ -24,26 +23,13 @@ private val LightColors = lightColorScheme(
     error = EthosError
 )
 
-private val DarkColors = darkColorScheme(
-    primary = EthosGreenLight,
-    onPrimary = EthosGreenDark,
-    primaryContainer = EthosGreen,
-    secondary = EthosTealLight,
-    background = EthosGreenDark,
-    onBackground = EthosOnDark,
-    surface = Color(0xFF20302A),
-    onSurface = EthosOnDark,
-    error = EthosError
-)
-
 @Composable
 fun RutaEcologicaTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    val colors = if (darkTheme) DarkColors else LightColors
+    // Se fuerza siempre LightColors (o DarkColors si prefieres) sin importar el sistema
     MaterialTheme(
-        colorScheme = colors,
+        colorScheme = LightColors,
         typography = EthosTypography,
         content = content
     )
