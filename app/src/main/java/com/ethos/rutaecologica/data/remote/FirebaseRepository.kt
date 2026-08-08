@@ -93,12 +93,69 @@ class FirebaseRepository @Inject constructor(
     private fun safeInt(s: DataSnapshot, key: String): Int =
         s.child(key).value?.toString()?.toIntOrNull() ?: 0
 
+    /**
+     * 🔎 LOG TEMPORAL DE DIAGNÓSTICO — quitar cuando ya no se necesite.
+     * Imprime exactamente qué URL de video/modelo3D llegó de Firebase
+     * para este lugar, y avisa si detecta un link de "compartir" de
+     * Google Drive (view?usp=...) en lugar de uno de descarga directa,
+     * que es la causa más común de que "todo cargue pero no reproduzca".
+     * Filtra Logcat por el tag "TRACER_MEDIA" para verlo.
+     */
+    private fun logDiagnosticoMultimedia(id: String, video: String, modelo3D: String) {
+        Log.i("TRACER_MEDIA", "==================== $id ====================")
+
+        if (video.isBlank()) {
+            Log.i("TRACER_MEDIA", "🎬 video: (vacío, no hay video para este lugar)")
+        } else {
+            Log.i("TRACER_MEDIA", "🎬 video URL cruda: $video")
+            when {
+                video.contains("drive.google.com") && video.contains("/view") -> {
+                    Log.w("TRACER_MEDIA", "⚠️ video es un link de VISOR de Drive (view), NO de descarga directa. No va a reproducir así.")
+                }
+                video.contains("drive.google.com") && video.contains("uc?export=download") -> {
+                    Log.i("TRACER_MEDIA", "✅ video tiene formato de descarga directa de Drive.")
+                }
+                else -> {
+                    Log.i("TRACER_MEDIA", "ℹ️ video no es un link de Drive reconocido, se usará tal cual.")
+                }
+            }
+        }
+
+        if (modelo3D.isBlank()) {
+            Log.i("TRACER_MEDIA", "🧊 modelo3D: (vacío, no hay modelo 3D para este lugar)")
+        } else {
+            Log.i("TRACER_MEDIA", "🧊 modelo3D URL cruda: $modelo3D")
+            when {
+                modelo3D.contains("drive.google.com") && modelo3D.contains("/view") -> {
+                    Log.w("TRACER_MEDIA", "⚠️ modelo3D es un link de VISOR de Drive (view), NO de descarga directa. No va a cargar así.")
+                }
+                modelo3D.contains("drive.google.com") && modelo3D.contains("uc?export=download") -> {
+                    Log.i("TRACER_MEDIA", "✅ modelo3D tiene formato de descarga directa de Drive.")
+                }
+                !modelo3D.endsWith(".glb", ignoreCase = true) && !modelo3D.contains("drive.google.com") -> {
+                    Log.w("TRACER_MEDIA", "⚠️ modelo3D no termina en .glb ni es de Drive, revisa el formato del archivo.")
+                }
+                else -> {
+                    Log.i("TRACER_MEDIA", "ℹ️ modelo3D reconocido como .glb directo.")
+                }
+            }
+        }
+
+        Log.i("TRACER_MEDIA", "==============================================")
+    }
+
     private fun mapSnapshot(s: DataSnapshot, id: String): Lugar {
         val nombreAlternativo = when {
             id.startsWith("MANG") -> "Manglar"
             id.startsWith("AVE") -> "Observatorio de Aves"
             else -> "Punto $id"
         }
+
+        // 🔎 Diagnóstico temporal: mira Logcat filtrando por "TRACER_MEDIA"
+        val videoUrl = safeStr(s, "video")
+        val modelo3DUrl = safeStr(s, "modelo3D")
+        logDiagnosticoMultimedia(id, videoUrl, modelo3DUrl)
+
         return Lugar(
             id = id,
             nombre = safeStr(s, "nombre", nombreAlternativo),
@@ -108,13 +165,13 @@ class FirebaseRepository @Inject constructor(
             estrellas = safeInt(s, "estrellas"),
             audio = safeStr(s, "audio"),
             imagen = safeStr(s, "imagen"),
-            video = safeStr(s, "video"),
+            video = videoUrl,
             latitud = safeDouble(s, "latitud"),
             longitud = safeDouble(s, "longitud"),
             datoCurioso = safeStr(s, "datoCurioso"),
             estadoConservacion = safeStr(s, "estadoConservacion"),
             habitat = safeStr(s, "habitat"),
-            modelo3D = safeStr(s, "modelo3D"),
+            modelo3D = modelo3DUrl,
             nivel = safeStr(s, "nivel")
         )
     }

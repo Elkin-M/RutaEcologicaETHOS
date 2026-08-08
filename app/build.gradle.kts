@@ -87,6 +87,10 @@ dependencies {
     // Coil (imágenes desde URL)
     implementation("io.coil-kt:coil-compose:2.6.0")
 
+    // WebViewAssetLoader: necesario para servir el .glb descargado localmente
+    // al WebView del visor 3D de forma segura (file:// está bloqueado en WebView).
+    implementation("androidx.webkit:webkit:1.12.1")
+
     // Accompanist permisos (cámara)
     implementation("com.google.accompanist:accompanist-permissions:0.34.0")
 

@@ -1,8 +1,17 @@
 package com.ethos.rutaecologica.ui.screens.result
 
 import android.annotation.SuppressLint
+import android.os.Handler
+import android.os.Looper
 import android.view.ViewGroup
+import android.webkit.ConsoleMessage
+import android.webkit.JavascriptInterface
+import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -10,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
@@ -21,17 +31,26 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
+import androidx.webkit.WebViewAssetLoader
 import coil.compose.AsyncImage
 import com.ethos.rutaecologica.ui.common.EstrellasChip
 import com.ethos.rutaecologica.ui.theme.EthosGreen
 import com.ethos.rutaecologica.ui.theme.EthosGreenDark
 import com.ethos.rutaecologica.ui.theme.EthosSand
+import kotlinx.coroutines.delay
+import java.io.File
+
+// Fondo fijo del recuadro del visor 3D: se ve SIEMPRE (cargando, error o
+// modelo listo) para que quede claro dónde debe aparecer el modelo aunque
+// el WebView esté transparente o en blanco.
+private val ColorFondoVisor3D = Color(0xFFE7E2D3)
 
 @Composable
 fun ResultScreen(
@@ -41,6 +60,10 @@ fun ResultScreen(
 ) {
     val lugar by viewModel.lugar.collectAsState()
     val reproduciendo by viewModel.isPlaying.collectAsState()
+    val modelo3DLocal by viewModel.modelo3DLocal.collectAsState()
+    val modelo3DCargando by viewModel.modelo3DCargando.collectAsState()
+    val modelo3DError by viewModel.modelo3DError.collectAsState()
+    val modelo3DProgreso by viewModel.modelo3DProgreso.collectAsState()
 
     val datos = lugar ?: run {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -49,120 +72,237 @@ fun ResultScreen(
         return
     }
 
-    Column(
+    Box(
         Modifier
             .fillMaxSize()
             .background(EthosSand)
     ) {
-        // Header: video si existe, si no la imagen de siempre como respaldo
-        Box {
-            if (datos.video.isNotBlank()) {
-                VideoHeader(url = datos.video)
-            } else {
-                AsyncImage(
-                    model = datos.imagen,
-                    contentDescription = datos.nombre,
+        Column(
+            Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+        ) {
+            // Header: video o imagen, ahora despegado del borde de la
+            // pantalla y respetando el status bar (donde están las
+            // notificaciones), con márgenes y esquinas redondeadas.
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(start = 16.dp, top = 8.dp, end = 16.dp)
+            ) {
+                if (datos.video.isNotBlank()) {
+                    VideoHeader(
+                        url = datos.video,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(220.dp)
+                            .clip(RoundedCornerShape(22.dp))
+                    )
+                } else {
+                    AsyncImage(
+                        model = datos.imagen,
+                        contentDescription = datos.nombre,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(220.dp)
+                            .clip(RoundedCornerShape(22.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+            }
+
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp)
+            ) {
+                if (datos.categoria.isNotBlank()) {
+                    AssistChip(onClick = {}, label = { Text(datos.categoria) })
+                    Spacer(Modifier.height(10.dp))
+                }
+
+                Text(
+                    datos.nombre,
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = EthosGreenDark
+                )
+                Spacer(Modifier.height(10.dp))
+                EstrellasChip(cantidad = datos.estrellas)
+                Spacer(Modifier.height(18.dp))
+
+                Text(
+                    datos.descripcion,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = EthosGreenDark.copy(alpha = 0.85f)
+                )
+
+                Spacer(Modifier.height(20.dp))
+
+                if (datos.audio.isNotBlank()) {
+                    OutlinedButton(
+                        onClick = { viewModel.playPauseAudio(datos.audio) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp)
+                    ) {
+                        Icon(
+                            if (reproduciendo) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                            contentDescription = null
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(if (reproduciendo) "Pausar audioguía" else "Escuchar audioguía")
+                    }
+                    Spacer(Modifier.height(12.dp))
+                }
+
+                // Visor 3D: solo aparece si el lugar tiene modelo3D cargado.
+                // El recuadro de 280dp con fondo ColorFondoVisor3D se muestra
+                // SIEMPRE en los 3 estados (descargando / error / listo), así
+                // nunca queda un espacio en blanco sin explicación.
+                if (datos.modelo3D.isNotBlank()) {
+                    Text(
+                        "Modelo 3D",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = EthosGreenDark
+                    )
+                    Spacer(Modifier.height(8.dp))
+
+                    Box(
+                        Modifier
+                            .fillMaxWidth()
+                            .height(280.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(ColorFondoVisor3D),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        when {
+                            modelo3DCargando -> {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.fillMaxWidth(0.7f)
+                                ) {
+                                    CircularProgressIndicator(color = EthosGreen)
+                                    Spacer(Modifier.height(12.dp))
+                                    Text(
+                                        "Descargando modelo 3D...",
+                                        color = EthosGreenDark.copy(alpha = 0.7f),
+                                        textAlign = TextAlign.Center
+                                    )
+                                    Spacer(Modifier.height(10.dp))
+
+                                    if (modelo3DProgreso < 0f) {
+                                        LinearProgressIndicator(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clip(RoundedCornerShape(50)),
+                                            color = EthosGreen,
+                                            trackColor = EthosGreenDark.copy(alpha = 0.15f)
+                                        )
+                                    } else {
+                                        LinearProgressIndicator(
+                                            progress = { modelo3DProgreso },
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clip(RoundedCornerShape(50)),
+                                            color = EthosGreen,
+                                            trackColor = EthosGreenDark.copy(alpha = 0.15f)
+                                        )
+                                        Spacer(Modifier.height(6.dp))
+                                        Text(
+                                            "${(modelo3DProgreso * 100).toInt()}%",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = EthosGreenDark.copy(alpha = 0.6f)
+                                        )
+                                    }
+                                }
+                            }
+                            modelo3DError != null -> {
+                                MensajeErrorVisor(
+                                    titulo = "Error al descargar el modelo",
+                                    detalle = modelo3DError ?: ""
+                                )
+                            }
+                            modelo3DLocal != null -> {
+                                Model3DViewer(
+                                    archivoLocal = modelo3DLocal!!,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(20.dp))
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                Button(
+                    onClick = { onContinuar(datos.id, datos.estrellas) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(260.dp),
-                    contentScale = ContentScale.Crop
-                )
-            }
-            IconButton(
-                onClick = onVolver,
-                modifier = Modifier
-                    .padding(16.dp)
-                    .clip(RoundedCornerShape(50))
-                    .background(Color.Black.copy(alpha = 0.35f))
-            ) {
-                Icon(Icons.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White)
+                        .height(52.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = EthosGreen)
+                ) {
+                    Text("Continuar", fontWeight = FontWeight.Bold)
+                }
             }
         }
 
-        Column(
-            Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-                .padding(24.dp)
+        // Botón "volver": overlay fijo, ahora también respeta el status bar
+        // para no quedar debajo de las notificaciones.
+        IconButton(
+            onClick = onVolver,
+            modifier = Modifier
+                .statusBarsPadding()
+                .padding(16.dp)
+                .clip(RoundedCornerShape(50))
+                .background(Color.Black.copy(alpha = 0.35f))
         ) {
-            if (datos.categoria.isNotBlank()) {
-                AssistChip(onClick = {}, label = { Text(datos.categoria) })
-                Spacer(Modifier.height(10.dp))
-            }
-
-            Text(
-                datos.nombre,
-                style = MaterialTheme.typography.headlineMedium,
-                color = EthosGreenDark
-            )
-            Spacer(Modifier.height(10.dp))
-            EstrellasChip(cantidad = datos.estrellas)
-            Spacer(Modifier.height(18.dp))
-
-            Text(
-                datos.descripcion,
-                style = MaterialTheme.typography.bodyLarge,
-                color = EthosGreenDark.copy(alpha = 0.85f)
-            )
-
-            Spacer(Modifier.height(20.dp))
-
-            if (datos.audio.isNotBlank()) {
-                OutlinedButton(
-                    onClick = { viewModel.playPauseAudio(datos.audio) },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp)
-                ) {
-                    Icon(
-                        if (reproduciendo) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                        contentDescription = null
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(if (reproduciendo) "Pausar audioguía" else "Escuchar audioguía")
-                }
-                Spacer(Modifier.height(12.dp))
-            }
-
-            // Visor 3D: solo aparece si el lugar tiene modelo3D cargado
-            if (datos.modelo3D.isNotBlank()) {
-                Text(
-                    "Modelo 3D",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = EthosGreenDark
-                )
-                Spacer(Modifier.height(8.dp))
-                Model3DViewer(
-                    glbUrl = datos.modelo3D,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(280.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                )
-                Spacer(Modifier.height(20.dp))
-            }
-
-            Spacer(Modifier.height(12.dp))
-
-            Button(
-                onClick = { onContinuar(datos.id, datos.estrellas) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = EthosGreen)
-            ) {
-                Text("Continuar", fontWeight = FontWeight.Bold)
-            }
+            Icon(Icons.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White)
         }
     }
 }
 
 /**
- * Header de video usando Media3/ExoPlayer, mismo tamaño que tenía la
- * imagen original (260dp de alto).
+ * Mensaje de error mostrado dentro del propio recuadro del visor 3D, para
+ * poder diagnosticar sin logcat qué está fallando.
  */
 @Composable
-private fun VideoHeader(url: String) {
+private fun MensajeErrorVisor(titulo: String, detalle: String) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .fillMaxWidth(0.85f)
+            .padding(16.dp)
+    ) {
+        Icon(
+            Icons.Filled.ErrorOutline,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.error,
+            modifier = Modifier.size(32.dp)
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            titulo,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.error,
+            textAlign = TextAlign.Center
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            detalle,
+            style = MaterialTheme.typography.bodySmall,
+            color = EthosGreenDark.copy(alpha = 0.75f),
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+/**
+ * Header de video usando Media3/ExoPlayer.
+ */
+@Composable
+private fun VideoHeader(url: String, modifier: Modifier = Modifier) {
     val context = LocalContext.current
 
     val exoPlayer = remember(url) {
@@ -190,69 +330,257 @@ private fun VideoHeader(url: String) {
                 )
             }
         },
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(260.dp)
+        modifier = modifier
     )
 }
 
 /**
- * Visor de modelos 3D en formato .glb usando el web component
- * <model-viewer> de Google dentro de un WebView. Es la forma más
- * simple de mostrar .glb en Android sin agregar una librería 3D
- * pesada como Filament o Sceneform.
+ * Estado interno de la carga del visor 3D dentro del WebView (distinto del
+ * estado de descarga del archivo, que ya se maneja en el ViewModel).
+ */
+private enum class EstadoWebView { CARGANDO, LISTO, ERROR }
+
+/**
+ * Puente JS -> Android para saber si <model-viewer> realmente terminó de
+ * renderizar el modelo o si tiró un error, ya que sin esto el WebView puede
+ * quedar en blanco sin ningún aviso visible.
  *
- * IMPORTANTE: requiere permiso de Internet en el manifest (ya lo
- * tienes, porque el resto de la app usa red) y JavaScript habilitado
- * en el WebView, que se activa aquí mismo.
+ * Los métodos @JavascriptInterface se ejecutan en un hilo interno del
+ * WebView, por eso se despachan al hilo principal antes de tocar el estado
+ * de Compose.
+ */
+private class ModelViewerBridge(
+    private val onLoad: () -> Unit,
+    private val onError: (String) -> Unit
+) {
+    private val handler = Handler(Looper.getMainLooper())
+
+    @JavascriptInterface
+    fun onModelLoad() {
+        handler.post { onLoad() }
+    }
+
+    @JavascriptInterface
+    fun onModelError(mensaje: String) {
+        handler.post { onError(mensaje) }
+    }
+}
+
+/**
+ * Visor de modelos 3D en formato .glb usando el web component
+ * <model-viewer> de Google dentro de un WebView.
+ *
+ * Recibe [archivoLocal], ya descargado por Model3DDownloader, y lo sirve al
+ * WebView mediante WebViewAssetLoader bajo el dominio virtual
+ * https://appassets.androidplatform.net/.
+ *
+ * Diagnóstico sin logcat: se agrega un puente JS ([ModelViewerBridge]) que
+ * escucha los eventos 'load' y 'error' del propio <model-viewer>, más un
+ * timeout de 10s que detecta si la librería model-viewer nunca llegó a
+ * registrarse (por ejemplo si no hay acceso a unpkg.com) y errores de red
+ * del propio WebViewClient. Cualquiera de estos casos se muestra como texto
+ * legible en el recuadro donde debería estar el modelo.
  */
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-private fun Model3DViewer(glbUrl: String, modifier: Modifier = Modifier) {
-    AndroidView(
-        modifier = modifier,
-        factory = { ctx ->
-            WebView(ctx).apply {
-                layoutParams = ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT
+private fun Model3DViewer(archivoLocal: File, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+
+    var estado by remember(archivoLocal) { mutableStateOf(EstadoWebView.CARGANDO) }
+    var mensajeError by remember(archivoLocal) { mutableStateOf("") }
+
+    val assetLoader = remember(archivoLocal) {
+        WebViewAssetLoader.Builder()
+            .addPathHandler(
+                "/modelos3d/",
+                WebViewAssetLoader.InternalStoragePathHandler(
+                    context,
+                    archivoLocal.parentFile ?: archivoLocal
                 )
-                settings.javaScriptEnabled = true
-                settings.domStorageEnabled = true
-                setBackgroundColor(0x00000000)
+            )
+            .build()
+    }
+
+    val bridge = remember(archivoLocal) {
+        ModelViewerBridge(
+            onLoad = {
+                estado = EstadoWebView.LISTO
+            },
+            onError = { mensaje ->
+                estado = EstadoWebView.ERROR
+                mensajeError = mensaje
             }
-        },
-        update = { webView ->
-            val html = """
-                <!DOCTYPE html>
-                <html>
-                <head>
-                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
-                  <style>
-                    html, body { margin:0; padding:0; height:100%; background:transparent; }
-                    model-viewer { width:100%; height:100%; --poster-color: transparent; }
-                  </style>
-                </head>
-                <body>
-                  <model-viewer
-                    src="$glbUrl"
-                    camera-controls
-                    auto-rotate
-                    shadow-intensity="1"
-                    exposure="1"
-                    style="width:100%;height:100%;">
-                  </model-viewer>
-                </body>
-                </html>
-            """.trimIndent()
-            webView.loadDataWithBaseURL(
-                "https://appassets.androidplatform.net/",
-                html,
-                "text/html",
-                "utf-8",
-                null
+        )
+    }
+
+    // Si a los 10s ni 'load' ni 'error' se dispararon, lo más probable es
+    // que la librería model-viewer nunca haya cargado (sin internet a
+    // unpkg.com, bloqueada por firewall/proxy, etc.) — en ese caso
+    // <model-viewer> queda como una etiqueta vacía y nunca dispara eventos.
+    LaunchedEffect(archivoLocal) {
+        delay(10_000)
+        if (estado == EstadoWebView.CARGANDO) {
+            estado = EstadoWebView.ERROR
+            mensajeError = "Tiempo de espera agotado cargando el visor 3D. " +
+                    "Es probable que no haya conexión a internet para descargar " +
+                    "la librería model-viewer (unpkg.com), o que el archivo " +
+                    ".glb esté dañado."
+        }
+    }
+
+    Box(modifier, contentAlignment = Alignment.Center) {
+        AndroidView(
+            modifier = Modifier.fillMaxSize(),
+            factory = { ctx ->
+                WebView(ctx).apply {
+                    layoutParams = ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+                    settings.javaScriptEnabled = true
+                    settings.domStorageEnabled = true
+                    settings.allowFileAccess = false
+                    setBackgroundColor(0x00000000)
+
+                    addJavascriptInterface(bridge, "AndroidBridge")
+
+                    webViewClient = object : WebViewClient() {
+                        override fun shouldInterceptRequest(
+                            view: WebView,
+                            request: WebResourceRequest
+                        ): WebResourceResponse? {
+                            return assetLoader.shouldInterceptRequest(request.url)
+                        }
+
+                        override fun onReceivedError(
+                            view: WebView,
+                            request: WebResourceRequest,
+                            error: WebResourceError
+                        ) {
+                            super.onReceivedError(view, request, error)
+                            // Solo nos importa si falla el documento principal,
+                            // no subrecursos sueltos.
+                            if (request.isForMainFrame) {
+                                estado = EstadoWebView.ERROR
+                                mensajeError = "Error de red cargando el visor: " +
+                                        "${error.description} (${request.url})"
+                            }
+                        }
+                    }
+
+                    webChromeClient = object : WebChromeClient() {
+                        override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean {
+                            // Si algo truena en la consola JS antes de que el
+                            // puente pueda reportarlo (p.ej. error de sintaxis
+                            // en un script de terceros), lo dejamos como pista.
+                            if (consoleMessage.messageLevel() == ConsoleMessage.MessageLevel.ERROR &&
+                                estado == EstadoWebView.CARGANDO
+                            ) {
+                                mensajeError = "Consola JS: ${consoleMessage.message()}"
+                            }
+                            return true
+                        }
+                    }
+                }
+            },
+            update = { webView ->
+                val nombreArchivo = archivoLocal.name
+                val html = """
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                      <style>
+                        html, body { margin:0; padding:0; height:100%; background:transparent; }
+                        model-viewer { width:100%; height:100%; --poster-color: transparent; }
+                      </style>
+                    </head>
+                    <body>
+                      <model-viewer
+                        id="mv"
+                        src="https://appassets.androidplatform.net/modelos3d/$nombreArchivo"
+                        camera-controls
+                        auto-rotate
+                        shadow-intensity="1"
+                        exposure="1"
+                        style="width:100%;height:100%;">
+                      </model-viewer>
+
+                      <script>
+                        window.onerror = function(msg, url, line) {
+                          if (window.AndroidBridge) {
+                            AndroidBridge.onModelError('Error de script: ' + msg + ' (' + url + ':' + line + ')');
+                          }
+                        };
+                      </script>
+                      <script type="module" src="https://unpkg.com/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
+                      <script>
+                        // Si a los 8s el custom element nunca se registró, la
+                        // librería no llegó a cargar (red bloqueada, etc.)
+                        setTimeout(function () {
+                          if (!customElements.get('model-viewer')) {
+                            if (window.AndroidBridge) {
+                              AndroidBridge.onModelError('La librería model-viewer no se pudo cargar desde unpkg.com. Revisa la conexión a internet del dispositivo.');
+                            }
+                          }
+                        }, 8000);
+
+                        var mv = document.getElementById('mv');
+                        mv.addEventListener('load', function () {
+                          if (window.AndroidBridge) AndroidBridge.onModelLoad();
+                        });
+                        mv.addEventListener('error', function (e) {
+                          // OJO: JSON.stringify(new Error(...)) da "{}" porque
+                          // 'message' y 'stack' no son propiedades enumerables.
+                          // Por eso extraemos el motivo a mano en vez de
+                          // stringificar todo el detail de una.
+                          var detail = (e && e.detail) || {};
+                          var tipo = detail.type || 'desconocido';
+                          var motivo = 'sin detalle adicional';
+                          var se = detail.sourceError;
+                          if (se) {
+                            if (se.message) { motivo = se.message; }
+                            else if (typeof se.toString === 'function') { motivo = se.toString(); }
+                          }
+                          if (window.AndroidBridge) {
+                            AndroidBridge.onModelError('El visor no pudo renderizar el archivo .glb (tipo: ' + tipo + '). Motivo: ' + motivo);
+                          }
+                        });
+                      </script>
+                    </body>
+                    </html>
+                """.trimIndent()
+                webView.loadDataWithBaseURL(
+                    "https://appassets.androidplatform.net/",
+                    html,
+                    "text/html",
+                    "utf-8",
+                    null
+                )
+            }
+        )
+
+        // Overlay de carga: se ve encima del WebView (que puede estar en
+        // blanco mientras tanto) hasta que 'load' confirme que el modelo
+        // ya se renderizó.
+        if (estado == EstadoWebView.CARGANDO) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                CircularProgressIndicator(color = EthosGreen)
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "Cargando visor 3D...",
+                    color = EthosGreenDark.copy(alpha = 0.7f)
+                )
+            }
+        }
+
+        // Overlay de error: reemplaza el WebView en blanco por un mensaje
+        // legible, sin necesidad de logcat.
+        if (estado == EstadoWebView.ERROR) {
+            MensajeErrorVisor(
+                titulo = "No se pudo mostrar el modelo 3D",
+                detalle = mensajeError
             )
         }
-    )
+    }
 }
