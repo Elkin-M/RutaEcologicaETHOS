@@ -3,6 +3,7 @@ package com.ethos.rutaecologica.ui.screens.result
 import android.annotation.SuppressLint
 import android.os.Handler
 import android.os.Looper
+import android.view.View
 import android.view.ViewGroup
 import android.webkit.ConsoleMessage
 import android.webkit.JavascriptInterface
@@ -10,6 +11,7 @@ import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
+import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.compose.BackHandler
@@ -474,9 +476,24 @@ private fun Model3DViewer(archivoLocal: File, modifier: Modifier = Modifier) {
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT
                     )
-                    settings.javaScriptEnabled = true
-                    settings.domStorageEnabled = true
-                    settings.allowFileAccess = false
+                    
+                    // 1. CONFIGURACIÓN DEL WEBVIEW (Rendimiento)
+                    setLayerType(View.LAYER_TYPE_HARDWARE, null)
+                    
+                    settings.apply {
+                        javaScriptEnabled = true
+                        domStorageEnabled = true
+                        allowFileAccess = false
+                        
+                        // Prioridad de renderizado (Solo disponible vía setRenderPriority en versiones antiguas)
+                        @Suppress("DEPRECATION")
+                        setRenderPriority(WebSettings.RenderPriority.HIGH)
+                        
+                        // Configuración de Cache para evitar re-decodificación innecesaria
+                        cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
+                        domStorageEnabled = true
+                    }
+                    
                     setBackgroundColor(0x00000000)
 
                     addJavascriptInterface(bridge, "AndroidBridge")
@@ -533,14 +550,19 @@ private fun Model3DViewer(archivoLocal: File, modifier: Modifier = Modifier) {
                       </style>
                     </head>
                     <body>
-                      <model-viewer
+                    <model-viewer
                         id="mv"
                         src="https://appassets.androidplatform.net/modelos3d/$nombreArchivo"
                         camera-controls
                         auto-rotate
                         shadow-intensity="1"
                         exposure="1"
-                        style="width:100%;height:100%;">
+                        loading="eager"
+                        reveal="manual"
+                        interpolation-decay="20"
+                        min-camera-orbit="auto auto 5%"
+                        max-camera-orbit="auto auto 200%"
+                        style="width:100%;height:100%; opacity: 0; transition: opacity 0.3s ease-in-out;">
                       </model-viewer>
 
                       <script>
@@ -552,19 +574,30 @@ private fun Model3DViewer(archivoLocal: File, modifier: Modifier = Modifier) {
                       </script>
                       <script type="module" src="https://unpkg.com/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
                       <script>
-                        // Si a los 8s el custom element nunca se registró, la
-                        // librería no llegó a cargar (red bloqueada, etc.)
+                        var mv = document.getElementById('mv');
+                        
+                        // Si a los 8s el custom element nunca se registró
                         setTimeout(function () {
                           if (!customElements.get('model-viewer')) {
                             if (window.AndroidBridge) {
-                              AndroidBridge.onModelError('La librería model-viewer no se pudo cargar desde unpkg.com. Revisa la conexión a internet del dispositivo.');
+                              AndroidBridge.onModelError('La librería model-viewer no se pudo cargar.');
                             }
                           }
                         }, 8000);
 
-                        var mv = document.getElementById('mv');
                         mv.addEventListener('load', function () {
+                          // Revelar manualmente para evitar "pop-in"
+                          mv.style.opacity = '1';
+                          if (typeof mv.dismissPoster === 'function') {
+                            mv.dismissPoster();
+                          }
+                          
                           if (window.AndroidBridge) AndroidBridge.onModelLoad();
+                        });
+
+                        // Optimización: Pausar auto-rotate cuando no está en pantalla o hay interacción
+                        mv.addEventListener('camera-change', function() {
+                           // El usuario está moviendo la cámara, model-viewer pausa auto-rotate solo
                         });
                         mv.addEventListener('error', function (e) {
                           // OJO: JSON.stringify(new Error(...)) da "{}" porque
