@@ -89,7 +89,7 @@ fun ResultScreen(
                 Modifier
                     .fillMaxWidth()
                     .statusBarsPadding()
-                    .padding(start = 16.dp, top = 8.dp, end = 16.dp)
+                    .padding(start = 16.dp, end = 16.dp, top = 8.dp)
             ) {
                 if (datos.video.isNotBlank()) {
                     VideoHeader(
