@@ -12,14 +12,18 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
@@ -27,11 +31,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -64,6 +70,8 @@ fun ResultScreen(
     val modelo3DCargando by viewModel.modelo3DCargando.collectAsState()
     val modelo3DError by viewModel.modelo3DError.collectAsState()
     val modelo3DProgreso by viewModel.modelo3DProgreso.collectAsState()
+
+    var visorFullScreen by remember { mutableStateOf(false) }
 
     val datos = lugar ?: run {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -223,10 +231,28 @@ fun ResultScreen(
                                 )
                             }
                             modelo3DLocal != null -> {
-                                Model3DViewer(
-                                    archivoLocal = modelo3DLocal!!,
-                                    modifier = Modifier.fillMaxSize()
-                                )
+                                Box(Modifier.fillMaxSize()) {
+                                    Model3DViewer(
+                                        archivoLocal = modelo3DLocal!!,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                    // Overlay para evitar que el WebView capture el scroll del
+                                    // contenedor principal y permitir expandir a pantalla completa.
+                                    Box(
+                                        Modifier
+                                            .fillMaxSize()
+                                            .clickable { visorFullScreen = true }
+                                            .background(Color.Transparent),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            Icons.Filled.Fullscreen,
+                                            contentDescription = "Expandir",
+                                            tint = EthosGreenDark.copy(alpha = 0.4f),
+                                            modifier = Modifier.size(48.dp)
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -259,6 +285,17 @@ fun ResultScreen(
                 .background(Color.Black.copy(alpha = 0.35f))
         ) {
             Icon(Icons.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White)
+        }
+
+        // Visor FullScreen: se muestra sobre todo lo demás cuando se activa.
+        if (visorFullScreen && modelo3DLocal != null) {
+            BackHandler { visorFullScreen = false }
+            Visor3DFullScreen(
+                archivoLocal = modelo3DLocal!!,
+                nombre = datos.nombre,
+                descripcion = datos.descripcion,
+                onCerrar = { visorFullScreen = false }
+            )
         }
     }
 }
@@ -580,6 +617,72 @@ private fun Model3DViewer(archivoLocal: File, modifier: Modifier = Modifier) {
             MensajeErrorVisor(
                 titulo = "No se pudo mostrar el modelo 3D",
                 detalle = mensajeError
+            )
+        }
+    }
+}
+
+/**
+ * Vista a pantalla completa del modelo 3D para evitar conflictos con el
+ * scroll de la pantalla principal y permitir una mejor interacción.
+ */
+@Composable
+private fun Visor3DFullScreen(
+    archivoLocal: File,
+    nombre: String,
+    descripcion: String,
+    onCerrar: () -> Unit
+) {
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+    ) {
+        Model3DViewer(
+            archivoLocal = archivoLocal,
+            modifier = Modifier.fillMaxSize()
+        )
+
+        // Botón cerrar (arriba a la derecha)
+        IconButton(
+            onClick = onCerrar,
+            modifier = Modifier
+                .statusBarsPadding()
+                .padding(16.dp)
+                .align(Alignment.TopEnd)
+                .background(Color.Black.copy(alpha = 0.5f), RoundedCornerShape(50))
+        ) {
+            Icon(Icons.Filled.Close, contentDescription = "Cerrar", tint = Color.White)
+        }
+
+        // Info abajo (Nombre + Descripción)
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .heightIn(max = 350.dp) 
+                .background(
+                    Brush.verticalGradient(
+                        0f to Color.Transparent,
+                        0.3f to Color.Black.copy(alpha = 0.8f),
+                        1f to Color.Black
+                    )
+                )
+                .navigationBarsPadding()
+                .padding(horizontal = 24.dp, vertical = 28.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
+            Text(
+                text = nombre,
+                style = MaterialTheme.typography.headlineSmall,
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = descripcion,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White.copy(alpha = 0.9f)
             )
         }
     }
