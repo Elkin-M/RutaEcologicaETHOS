@@ -29,7 +29,7 @@ class UserPreferencesRepository @Inject constructor(
 
     val progresoFlow: Flow<UserProgress> = context.dataStore.data.map { prefs ->
         UserProgress(
-            usuario = prefs[Keys.USUARIO] ?: "Estudiante",
+            usuario = prefs[Keys.USUARIO] ?: "",
             nivel = prefs[Keys.NIVEL] ?: "Explorador",
             estrellas = prefs[Keys.ESTRELLAS] ?: 0,
             insignias = prefs[Keys.INSIGNIAS] ?: 1,

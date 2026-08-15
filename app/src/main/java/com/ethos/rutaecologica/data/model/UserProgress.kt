@@ -4,7 +4,7 @@ package com.ethos.rutaecologica.data.model
  * Progreso local del usuario (reemplazo de TinyDB -> DataStore).
  */
 data class UserProgress(
-    val usuario: String = "Estudiante",
+    val usuario: String = "",
     val nivel: String = Nivel.EXPLORADOR.etiqueta,
     val estrellas: Int = 0,
     val insignias: Int = 1,

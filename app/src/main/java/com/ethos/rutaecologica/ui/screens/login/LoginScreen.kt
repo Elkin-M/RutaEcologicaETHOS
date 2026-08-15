@@ -26,7 +26,15 @@ fun LoginScreen(
     onIngresar: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
+    val progreso by viewModel.progreso.collectAsState()
     var nombre by remember { mutableStateOf("") }
+
+    // Si ya existe un nombre guardado, entramos directamente a la ruta.
+    LaunchedEffect(progreso.usuario) {
+        if (progreso.usuario.isNotEmpty()) {
+            onIngresar()
+        }
+    }
 
     Column(
         modifier = Modifier
