@@ -4,9 +4,13 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.CutCornerShape
+import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.*
@@ -73,29 +77,68 @@ fun EstrellasChip(cantidad: Int, modifier: Modifier = Modifier) {
     }
 }
 
-/** Insignia circular de nivel, con color propio por rango. */
+/** Insignia circular de nivel, con color y forma propia por rango. */
 @Composable
 fun InsigniaNivel(nivel: String, size: Int = 72, modifier: Modifier = Modifier) {
     val color = when (nivel) {
         "Guardián" -> NivelGuardian
         "Protector" -> NivelProtector
         "Maestro ETHOS" -> NivelMaestro
+        "Leyenda Verde" -> NivelLeyenda
         else -> NivelExplorador
     }
+
+    val shape = when (nivel) {
+        "Guardián" -> RoundedCornerShape(12.dp)
+        "Protector" -> RoundedCornerShape(topStart = 24.dp, bottomEnd = 24.dp)
+        "Maestro ETHOS" -> CutCornerShape(16.dp)
+        "Leyenda Verde" -> StarShape()
+        else -> CircleShape
+    }
+
     Box(
         modifier = modifier
             .size(size.dp)
-            .clip(CircleShape)
+            .clip(shape)
             .background(Brush.radialGradient(listOf(color, color.copy(alpha = 0.6f)))),
         contentAlignment = Alignment.Center
     ) {
         Icon(
-            Icons.Filled.WorkspacePremium,
+            if (nivel == "Leyenda Verde") Icons.Filled.AutoAwesome else Icons.Filled.WorkspacePremium,
             contentDescription = nivel,
             tint = Color.White,
             modifier = Modifier.size((size * 0.5).dp)
         )
     }
+}
+
+/** Forma de estrella simple para la insignia de máximo nivel. */
+fun StarShape(): Shape = GenericShape { size, _ ->
+    val center = size.width / 2f
+    val radius = size.width / 2f
+    val innerRadius = radius * 0.4f
+    val points = 5
+    var angle = -Math.PI / 2
+    val nextAngle = Math.PI / points
+
+    moveTo(
+        (center + radius * Math.cos(angle)).toFloat(),
+        (center + radius * Math.sin(angle)).toFloat()
+    )
+
+    for (i in 1..points) {
+        angle += nextAngle
+        lineTo(
+            (center + innerRadius * Math.cos(angle)).toFloat(),
+            (center + innerRadius * Math.sin(angle)).toFloat()
+        )
+        angle += nextAngle
+        lineTo(
+            (center + radius * Math.cos(angle)).toFloat(),
+            (center + radius * Math.sin(angle)).toFloat()
+        )
+    }
+    close()
 }
 
 /** Barra de progreso animada hacia el siguiente nivel. */

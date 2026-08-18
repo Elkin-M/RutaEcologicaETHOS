@@ -12,13 +12,18 @@ data class UserProgress(
     val ultimoQR: String = ""
 )
 
-enum class Nivel(val etiqueta: String, val minEstrellas: Int, val numeroInsignias: Int) {
-    EXPLORADOR("Explorador", 0, 1),
-    GUARDIAN("Guardián", 20, 2),
-    PROTECTOR("Protector", 50, 3),
-    MAESTRO_ETHOS("Maestro ETHOS", 100, 4);
+enum class Nivel(val etiqueta: String, val numeroInsignias: Int, val porcentaje: Float) {
+    EXPLORADOR("Explorador", 1, 0.0f),
+    GUARDIAN("Guardián", 2, 0.2f),
+    PROTECTOR("Protector", 3, 0.5f),
+    MAESTRO_ETHOS("Maestro ETHOS", 4, 0.8f),
+    LEYENDA_VERDE("Leyenda Verde", 5, 1.0f);
+
+    fun minEstrellas(totalEstrellas: Int): Int {
+        return (totalEstrellas * porcentaje).toInt()
+    }
 
     companion object {
-        fun todos() = entries.sortedBy { it.minEstrellas }
+        fun todos() = entries.toList()
     }
 }

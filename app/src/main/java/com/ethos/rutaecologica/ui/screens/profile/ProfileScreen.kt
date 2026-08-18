@@ -29,6 +29,7 @@ fun ProfileScreen(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val progreso by viewModel.progreso.collectAsState()
+    val totalEstrellas by viewModel.totalEstrellas.collectAsState()
 
     Column(Modifier.fillMaxSize().background(EthosBackground)) {
         EcoHeader {
@@ -44,7 +45,7 @@ fun ProfileScreen(
                 Spacer(Modifier.width(16.dp))
                 Column {
                     Text(progreso.nivel, color = EthosTextLight, style = MaterialTheme.typography.titleLarge)
-                    Text("${progreso.estrellas} estrellas · ${progreso.insignias} insignias", color = EthosTextLight.copy(alpha = 0.85f))
+                    Text("${progreso.estrellas} estrellas de $totalEstrellas · ${progreso.insignias} insignias", color = EthosTextLight.copy(alpha = 0.85f))
                 }
             }
         }
@@ -54,7 +55,8 @@ fun ProfileScreen(
             Spacer(Modifier.height(16.dp))
 
             Nivel.todos().forEach { nivel ->
-                val alcanzado = progreso.estrellas >= nivel.minEstrellas
+                val minEstrellas = nivel.minEstrellas(totalEstrellas)
+                val alcanzado = progreso.estrellas >= minEstrellas
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -67,7 +69,7 @@ fun ProfileScreen(
                     Spacer(Modifier.width(12.dp))
                     Column {
                         Text(nivel.etiqueta, fontWeight = FontWeight.Bold, color = EthosTextDark)
-                        Text("Desde ${nivel.minEstrellas} estrellas · ${nivel.numeroInsignias} insignias", color = Color.Gray, style = MaterialTheme.typography.labelSmall)
+                        Text("Desde $minEstrellas estrellas · ${nivel.numeroInsignias} insignias", color = Color.Gray, style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }

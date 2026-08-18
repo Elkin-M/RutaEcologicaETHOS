@@ -2,6 +2,7 @@ package com.ethos.rutaecologica.di
 
 import android.content.Context
 import com.ethos.rutaecologica.data.local.UserPreferencesRepository
+import com.ethos.rutaecologica.data.remote.FirebaseRepository
 import com.google.firebase.FirebaseApp
 import com.google.firebase.database.FirebaseDatabase
 import dagger.Module
@@ -28,6 +29,7 @@ object AppModule {
     @Provides
     @Singleton
     fun provideUserPreferencesRepository(
-        @ApplicationContext context: Context
-    ): UserPreferencesRepository = UserPreferencesRepository(context)
+        @ApplicationContext context: Context,
+        firebaseRepository: FirebaseRepository
+    ): UserPreferencesRepository = UserPreferencesRepository(context, firebaseRepository)
 }

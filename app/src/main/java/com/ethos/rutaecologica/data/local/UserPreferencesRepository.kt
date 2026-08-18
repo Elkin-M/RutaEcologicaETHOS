@@ -7,7 +7,9 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.ethos.rutaecologica.data.model.UserProgress
 import com.ethos.rutaecologica.domain.GamificationLogic
+import com.ethos.rutaecologica.data.remote.FirebaseRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -16,7 +18,8 @@ private val Context.dataStore by preferencesDataStore(name = "ruta_ecologica_pre
 
 @Singleton
 class UserPreferencesRepository @Inject constructor(
-    private val context: Context
+    private val context: Context,
+    private val firebaseRepo: FirebaseRepository
 ) {
     private object Keys {
         val USUARIO = stringPreferencesKey("usuario")
@@ -54,6 +57,9 @@ class UserPreferencesRepository @Inject constructor(
      */
     suspend fun registrarVisita(lugarId: String, estrellasGanadas: Int): Boolean {
         var esNuevo = false
+        val lugares = firebaseRepo.obtenerTodosLosLugares()
+        val totalEstrellas = lugares.sumOf { it.estrellas }
+
         context.dataStore.edit { prefs ->
             val visitados = (prefs[Keys.LUGARES_VISITADOS] ?: "")
                 .split(",").filter { it.isNotBlank() }.toMutableList()
@@ -66,7 +72,7 @@ class UserPreferencesRepository @Inject constructor(
                 val nuevasEstrellas = (prefs[Keys.ESTRELLAS] ?: 0) + estrellasGanadas
                 prefs[Keys.ESTRELLAS] = nuevasEstrellas
 
-                val nivel = GamificationLogic.calcularNivel(nuevasEstrellas)
+                val nivel = GamificationLogic.calcularNivel(nuevasEstrellas, totalEstrellas)
                 prefs[Keys.NIVEL] = nivel.etiqueta
                 prefs[Keys.INSIGNIAS] = nivel.numeroInsignias
             }

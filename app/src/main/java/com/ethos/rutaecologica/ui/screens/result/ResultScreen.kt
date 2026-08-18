@@ -15,9 +15,12 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -58,6 +61,7 @@ import java.io.File
 // el WebView esté transparente o en blanco.
 private val ColorFondoVisor3D = Color(0xFFE7E2D3)
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ResultScreen(
     onContinuar: (lugarId: String, estrellas: Int) -> Unit,
@@ -93,30 +97,52 @@ fun ResultScreen(
             // Header: video o imagen, ahora despegado del borde de la
             // pantalla y respetando el status bar (donde están las
             // notificaciones), con márgenes y esquinas redondeadas.
+            val mediaItems = remember(datos) {
+                val list = mutableListOf<String>()
+                if (datos.imagen.isNotBlank()) list.add("IMG")
+                if (datos.video.isNotBlank()) list.add("VID")
+                list
+            }
+            val pagerState = rememberPagerState(pageCount = { mediaItems.size })
+
+            if (mediaItems.size > 1) {
+                LaunchedEffect(pagerState) {
+                    delay(5000)
+                    if (pagerState.currentPage == 0) {
+                        pagerState.animateScrollToPage(1)
+                    }
+                }
+            }
+
             Box(
                 Modifier
                     .fillMaxWidth()
                     .statusBarsPadding()
                     .padding(start = 16.dp, end = 16.dp, top = 8.dp)
             ) {
-                if (datos.video.isNotBlank()) {
-                    VideoHeader(
-                        url = datos.video,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(220.dp)
-                            .clip(RoundedCornerShape(22.dp))
-                    )
-                } else {
-                    AsyncImage(
-                        model = datos.imagen,
-                        contentDescription = datos.nombre,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(220.dp)
-                            .clip(RoundedCornerShape(22.dp)),
-                        contentScale = ContentScale.Crop
-                    )
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(220.dp)
+                        .clip(RoundedCornerShape(22.dp))
+                ) { page ->
+                    when (mediaItems[page]) {
+                        "IMG" -> {
+                            AsyncImage(
+                                model = datos.imagen,
+                                contentDescription = datos.nombre,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                        "VID" -> {
+                            VideoHeader(
+                                url = datos.video,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                    }
                 }
             }
 

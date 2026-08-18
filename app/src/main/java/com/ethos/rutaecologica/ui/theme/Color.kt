@@ -41,3 +41,4 @@ val NivelExplorador = Color(0xFF74C69D)
 val NivelGuardian = Color(0xFF118AB2)
 val NivelProtector = Color(0xFF9D4EDD)
 val NivelMaestro = Color(0xFFFFC300)
+val NivelLeyenda = Color(0xFFE63946) // Rojo vibrante o un verde esmeralda muy intenso
