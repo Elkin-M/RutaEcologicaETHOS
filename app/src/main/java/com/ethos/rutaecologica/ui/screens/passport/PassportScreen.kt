@@ -21,11 +21,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.ethos.rutaecologica.ui.common.EcoGradientHeader
-import com.ethos.rutaecologica.ui.theme.EthosGold
-import com.ethos.rutaecologica.ui.theme.EthosGreen
-import com.ethos.rutaecologica.ui.theme.EthosGreenDark
-import com.ethos.rutaecologica.ui.theme.EthosSand
+import com.ethos.rutaecologica.ui.common.EcoHeader
+import com.ethos.rutaecologica.ui.theme.*
 
 @Composable
 fun PassportScreen(
@@ -35,18 +32,18 @@ fun PassportScreen(
     val sellos by viewModel.sellos.collectAsState()
     val cargando by viewModel.cargando.collectAsState()
 
-    Column(Modifier.fillMaxSize().background(EthosSand)) {
-        EcoGradientHeader {
+    Column(Modifier.fillMaxSize().background(EthosBackground)) {
+        EcoHeader {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onVolver) {
-                    Icon(Icons.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White)
+                    Icon(Icons.Filled.ArrowBack, contentDescription = "Volver", tint = EthosTextLight)
                 }
                 Spacer(Modifier.width(4.dp))
                 Column {
-                    Text("Pasaporte Ambiental", color = Color.White, style = MaterialTheme.typography.headlineMedium)
+                    Text("Pasaporte Ambiental", color = EthosTextLight, style = MaterialTheme.typography.headlineMedium)
                     Text(
                         "${sellos.count { it.visitado }} / ${sellos.size} puntos sellados",
-                        color = Color.White.copy(alpha = 0.85f)
+                        color = EthosTextLight.copy(alpha = 0.85f)
                     )
                 }
             }
@@ -70,13 +67,13 @@ fun PassportScreen(
 
 @Composable
 private fun SelloCard(sello: SelloPasaporte) {
-    val colorFondo = if (sello.visitado) EthosGreen else Color.LightGray.copy(alpha = 0.35f)
+    val colorFondo = if (sello.visitado) EthosAccentTeal else Color.LightGray.copy(alpha = 0.35f)
     val colorIcono = if (sello.visitado) Color.White else Color.Gray
 
     Card(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp) // Flat design
     ) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(18.dp),
@@ -97,13 +94,13 @@ private fun SelloCard(sello: SelloPasaporte) {
                 sello.lugar.nombre,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
-                color = EthosGreenDark,
+                color = EthosTextDark,
                 maxLines = 2
             )
             Spacer(Modifier.height(4.dp))
             Text(
                 if (sello.visitado) "+${sello.lugar.estrellas} ⭐ obtenidas" else "Por descubrir",
-                color = if (sello.visitado) EthosGold.let { Color(0xFFB8860B) } else Color.Gray,
+                color = if (sello.visitado) EthosGoldDark else Color.Gray,
                 style = MaterialTheme.typography.labelSmall
             )
         }

@@ -18,11 +18,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ethos.rutaecologica.ui.common.EcoActionCard
-import com.ethos.rutaecologica.ui.common.EcoGradientHeader
+import com.ethos.rutaecologica.ui.common.EcoHeader
 import com.ethos.rutaecologica.ui.common.EstrellasChip
 import com.ethos.rutaecologica.ui.common.ProgresoNivelBar
 import com.ethos.rutaecologica.ui.theme.*
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun HomeScreen(
@@ -36,40 +37,47 @@ fun HomeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(EthosSand)
+            .background(EthosBackground)
             .verticalScroll(rememberScrollState())
     ) {
-        // ---- Header degradado: saludo + nivel + estrellas ----
-        EcoGradientHeader {
+        // ---- Header sólido: saludo + nivel + estrellas ----
+        EcoHeader {
             Text(
                 "Ruta Ecológica ETHOS",
-                color = Color.White.copy(alpha = 0.85f),
-                fontWeight = FontWeight.Medium
+                color = EthosTextLight.copy(alpha = 0.85f),
+                fontWeight = FontWeight.Medium,
+                fontSize = 16.sp
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                "Hola, ${progreso.usuario} 🌿",
-                color = Color.White,
-                style = MaterialTheme.typography.headlineLarge
+                "¡Hola, ${progreso.usuario}! 🌿",
+                color = EthosTextLight,
+                fontWeight = FontWeight.Bold,
+                fontSize = 24.sp
             )
             Spacer(Modifier.height(16.dp))
 
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    "Nivel: ${progreso.nivel}",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f)
-                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        "Nivel: ${progreso.nivel}",
+                        color = EthosTextLight.copy(alpha = 0.85f),
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 14.sp
+                    )
+                    Text(
+                        "Siguiente rango: ${viewModel.siguienteNivelLabel(progreso.estrellas)}",
+                        color = EthosTextLight.copy(alpha = 0.75f),
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 12.sp
+                    )
+                }
                 EstrellasChip(cantidad = progreso.estrellas)
             }
-            Spacer(Modifier.height(10.dp))
-            ProgresoNivelBar(progreso = viewModel.progresoHaciaSiguienteNivel(progreso.estrellas))
-            Spacer(Modifier.height(4.dp))
-            Text(
-                "Siguiente rango: ${viewModel.siguienteNivelLabel(progreso.estrellas)}",
-                color = Color.White.copy(alpha = 0.75f),
-                style = MaterialTheme.typography.labelSmall
+            Spacer(Modifier.height(6.dp))
+            ProgresoNivelBar(
+                progreso = viewModel.progresoHaciaSiguienteNivel(progreso.estrellas),
+                color = EthosPrimaryYellow
             )
         }
 
@@ -80,29 +88,33 @@ fun HomeScreen(
         ) {
             Text(
                 "¿Qué quieres hacer hoy?",
-                style = MaterialTheme.typography.titleLarge,
-                color = EthosGreenDark
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                color = EthosTextDark
             )
 
             EcoActionCard(
                 titulo = "Escanear Punto Ecológico",
                 subtitulo = "Encuentra un tótem con QR en el campus",
                 icono = Icons.Filled.QrCodeScanner,
-                colorFondo = EthosGreen,
+                colorFondo = EthosPrimaryYellow,
+                colorTexto = EthosTextDark,
                 onClick = onIrAEscanear
             )
             EcoActionCard(
                 titulo = "Pasaporte Ambiental",
                 subtitulo = "${progreso.lugaresVisitados.size} lugares visitados · ${progreso.insignias} insignias",
                 icono = Icons.Filled.Badge,
-                colorFondo = EthosTeal,
+                colorFondo = EthosSecondarySlate,
+                colorTexto = EthosTextLight,
                 onClick = onIrAPasaporte
             )
             EcoActionCard(
                 titulo = "Mi Progreso",
                 subtitulo = "Estadísticas y evolución de tu ruta",
                 icono = Icons.Filled.BarChart,
-                colorFondo = EthosBrown,
+                colorFondo = EthosAccentTeal,
+                colorTexto = EthosTextLight,
                 onClick = onIrAProgreso
             )
         }

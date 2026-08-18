@@ -26,9 +26,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.ethos.rutaecologica.ui.common.EcoGradientHeader
-import com.ethos.rutaecologica.ui.theme.EthosGold
-import com.ethos.rutaecologica.ui.theme.EthosGreenDark
+import com.ethos.rutaecologica.ui.common.EcoHeader
+import com.ethos.rutaecologica.ui.theme.*
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -49,12 +48,12 @@ fun ScannerScreen(
     }
 
     Column(Modifier.fillMaxSize().background(Color.Black)) {
-        EcoGradientHeader {
-            Text("Escanear Código QR", color = Color.White, style = MaterialTheme.typography.headlineMedium)
+        EcoHeader {
+            Text("Escanear Código QR", color = EthosTextLight, style = MaterialTheme.typography.headlineMedium)
             Spacer(Modifier.height(4.dp))
             Text(
                 "Apunta la cámara al QR del punto ecológico",
-                color = Color.White.copy(alpha = 0.85f)
+                color = EthosTextLight.copy(alpha = 0.85f)
             )
         }
 
@@ -152,17 +151,19 @@ private fun ScannerFrameOverlay() {
 @Composable
 private fun EstadoOverlay(mensaje: String, esError: Boolean = false, onReintentar: (() -> Unit)? = null) {
     Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.72f)), contentAlignment = Alignment.Center) {
-        Card(shape = RoundedCornerShape(20.dp), modifier = Modifier.padding(32.dp)) {
+        Card(shape = RoundedCornerShape(20.dp), modifier = Modifier.padding(32.dp), elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)) {
             Column(
                 modifier = Modifier.padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                if (!esError) CircularProgressIndicator(color = EthosGreenDark)
+                if (!esError) CircularProgressIndicator(color = EthosAccentTeal)
                 Spacer(Modifier.height(12.dp))
-                Text(mensaje, textAlign = androidx.compose.ui.text.style.TextAlign.Center, fontWeight = FontWeight.Medium)
+                Text(mensaje, textAlign = androidx.compose.ui.text.style.TextAlign.Center, fontWeight = FontWeight.Medium, color = EthosTextDark)
                 if (esError && onReintentar != null) {
                     Spacer(Modifier.height(16.dp))
-                    Button(onClick = onReintentar) { Text("Reintentar") }
+                    Button(onClick = onReintentar, colors = ButtonDefaults.buttonColors(containerColor = EthosHeaderNavy)) { 
+                        Text("Reintentar", color = Color.White) 
+                    }
                 }
             }
         }

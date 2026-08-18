@@ -49,9 +49,7 @@ import androidx.media3.ui.PlayerView
 import androidx.webkit.WebViewAssetLoader
 import coil.compose.AsyncImage
 import com.ethos.rutaecologica.ui.common.EstrellasChip
-import com.ethos.rutaecologica.ui.theme.EthosGreen
-import com.ethos.rutaecologica.ui.theme.EthosGreenDark
-import com.ethos.rutaecologica.ui.theme.EthosSand
+import com.ethos.rutaecologica.ui.theme.*
 import kotlinx.coroutines.delay
 import java.io.File
 
@@ -85,7 +83,7 @@ fun ResultScreen(
     Box(
         Modifier
             .fillMaxSize()
-            .background(EthosSand)
+            .background(EthosBackground)
     ) {
         Column(
             Modifier
@@ -135,7 +133,7 @@ fun ResultScreen(
                 Text(
                     datos.nombre,
                     style = MaterialTheme.typography.headlineMedium,
-                    color = EthosGreenDark
+                    color = EthosTextDark
                 )
                 Spacer(Modifier.height(10.dp))
                 EstrellasChip(cantidad = datos.estrellas)
@@ -144,7 +142,7 @@ fun ResultScreen(
                 Text(
                     datos.descripcion,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = EthosGreenDark.copy(alpha = 0.85f)
+                    color = EthosTextDark.copy(alpha = 0.85f)
                 )
 
                 Spacer(Modifier.height(20.dp))
@@ -173,7 +171,7 @@ fun ResultScreen(
                     Text(
                         "Modelo 3D",
                         style = MaterialTheme.typography.titleMedium,
-                        color = EthosGreenDark
+                        color = EthosTextDark
                     )
                     Spacer(Modifier.height(8.dp))
 
@@ -191,11 +189,11 @@ fun ResultScreen(
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     modifier = Modifier.fillMaxWidth(0.7f)
                                 ) {
-                                    CircularProgressIndicator(color = EthosGreen)
+                                    CircularProgressIndicator(color = EthosAccentTeal)
                                     Spacer(Modifier.height(12.dp))
                                     Text(
                                         "Descargando modelo 3D...",
-                                        color = EthosGreenDark.copy(alpha = 0.7f),
+                                        color = EthosTextDark.copy(alpha = 0.7f),
                                         textAlign = TextAlign.Center
                                     )
                                     Spacer(Modifier.height(10.dp))
@@ -205,8 +203,8 @@ fun ResultScreen(
                                             modifier = Modifier
                                                 .fillMaxWidth()
                                                 .clip(RoundedCornerShape(50)),
-                                            color = EthosGreen,
-                                            trackColor = EthosGreenDark.copy(alpha = 0.15f)
+                                            color = EthosAccentTeal,
+                                            trackColor = EthosTextDark.copy(alpha = 0.15f)
                                         )
                                     } else {
                                         LinearProgressIndicator(
@@ -214,14 +212,14 @@ fun ResultScreen(
                                             modifier = Modifier
                                                 .fillMaxWidth()
                                                 .clip(RoundedCornerShape(50)),
-                                            color = EthosGreen,
-                                            trackColor = EthosGreenDark.copy(alpha = 0.15f)
+                                            color = EthosAccentTeal,
+                                            trackColor = EthosHeaderNavy.copy(alpha = 0.1f)
                                         )
                                         Spacer(Modifier.height(6.dp))
                                         Text(
                                             "${(modelo3DProgreso * 100).toInt()}%",
                                             style = MaterialTheme.typography.labelMedium,
-                                            color = EthosGreenDark.copy(alpha = 0.6f)
+                                            color = EthosTextDark.copy(alpha = 0.6f)
                                         )
                                     }
                                 }
@@ -250,7 +248,7 @@ fun ResultScreen(
                                         Icon(
                                             Icons.Filled.Fullscreen,
                                             contentDescription = "Expandir",
-                                            tint = EthosGreenDark.copy(alpha = 0.4f),
+                                            tint = EthosHeaderNavy.copy(alpha = 0.4f),
                                             modifier = Modifier.size(48.dp)
                                         )
                                     }
@@ -269,9 +267,10 @@ fun ResultScreen(
                         .fillMaxWidth()
                         .height(52.dp),
                     shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = EthosGreen)
+                    colors = ButtonDefaults.buttonColors(containerColor = EthosHeaderNavy),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
                 ) {
-                    Text("Continuar", fontWeight = FontWeight.Bold)
+                    Text("Continuar", fontWeight = FontWeight.Bold, color = Color.White)
                 }
             }
         }
@@ -331,7 +330,7 @@ private fun MensajeErrorVisor(titulo: String, detalle: String) {
         Text(
             detalle,
             style = MaterialTheme.typography.bodySmall,
-            color = EthosGreenDark.copy(alpha = 0.75f),
+            color = EthosTextDark.copy(alpha = 0.75f),
             textAlign = TextAlign.Center
         )
     }
@@ -635,11 +634,11 @@ private fun Model3DViewer(archivoLocal: File, modifier: Modifier = Modifier) {
         // ya se renderizó.
         if (estado == EstadoWebView.CARGANDO) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                CircularProgressIndicator(color = EthosGreen)
+                CircularProgressIndicator(color = EthosAccentTeal)
                 Spacer(Modifier.height(8.dp))
                 Text(
                     "Cargando visor 3D...",
-                    color = EthosGreenDark.copy(alpha = 0.7f)
+                    color = EthosTextDark.copy(alpha = 0.7f)
                 )
             }
         }

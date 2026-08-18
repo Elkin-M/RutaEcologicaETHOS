@@ -12,10 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.ethos.rutaecologica.ui.common.EcoGradientHeader
-import com.ethos.rutaecologica.ui.theme.EthosGreen
-import com.ethos.rutaecologica.ui.theme.EthosGreenDark
-import com.ethos.rutaecologica.ui.theme.EthosSand
+import com.ethos.rutaecologica.ui.common.EcoHeader
+import com.ethos.rutaecologica.ui.theme.*
 
 private data class Pregunta(val texto: String, val opciones: List<String>, val correctaIndex: Int)
 
@@ -40,45 +38,46 @@ fun QuestionScreen(onVolver: () -> Unit) {
 
     val pregunta = preguntasDemo.getOrNull(indice)
 
-    Column(Modifier.fillMaxSize().background(EthosSand)) {
-        EcoGradientHeader {
+    Column(Modifier.fillMaxSize().background(EthosBackground)) {
+        EcoHeader {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onVolver) {
-                    Icon(Icons.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White)
+                    Icon(Icons.Filled.ArrowBack, contentDescription = "Volver", tint = EthosTextLight)
                 }
-                Text("Trivia Ambiental", color = Color.White, style = MaterialTheme.typography.headlineMedium)
+                Text("Trivia Ambiental", color = EthosTextLight, style = MaterialTheme.typography.headlineMedium)
             }
         }
 
         if (pregunta == null) {
             Column(Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                Text("¡Completaste la trivia! 🎉", style = MaterialTheme.typography.headlineMedium, color = EthosGreenDark)
+                Text("¡Completaste la trivia! 🎉", style = MaterialTheme.typography.headlineMedium, color = EthosTextDark)
                 Spacer(Modifier.height(8.dp))
-                Text("Puntaje: $puntaje / ${preguntasDemo.size}", color = EthosGreenDark)
+                Text("Puntaje: $puntaje / ${preguntasDemo.size}", color = EthosTextDark)
             }
         } else {
             Column(Modifier.padding(24.dp)) {
                 Text("Pregunta ${indice + 1} de ${preguntasDemo.size}", color = Color.Gray)
                 Spacer(Modifier.height(12.dp))
-                Text(pregunta.texto, style = MaterialTheme.typography.titleLarge, color = EthosGreenDark)
+                Text(pregunta.texto, style = MaterialTheme.typography.titleLarge, color = EthosTextDark)
                 Spacer(Modifier.height(20.dp))
 
                 pregunta.opciones.forEachIndexed { i, opcion ->
                     val esCorrecta = i == pregunta.correctaIndex
                     val colorFondo = when {
                         seleccion == -1 -> Color.White
-                        i == seleccion && esCorrecta -> EthosGreen.copy(alpha = 0.25f)
+                        i == seleccion && esCorrecta -> EthosAccentTeal.copy(alpha = 0.25f)
                         i == seleccion && !esCorrecta -> Color(0xFFFFCDD2)
-                        esCorrecta -> EthosGreen.copy(alpha = 0.15f)
+                        esCorrecta -> EthosAccentTeal.copy(alpha = 0.15f)
                         else -> Color.White
                     }
                     Card(
                         onClick = { if (seleccion == -1) { seleccion = i; if (esCorrecta) puntaje++ } },
                         shape = RoundedCornerShape(14.dp),
                         colors = CardDefaults.cardColors(containerColor = colorFondo),
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
-                        Text(opcion, modifier = Modifier.padding(16.dp), fontWeight = FontWeight.Medium, color = EthosGreenDark)
+                        Text(opcion, modifier = Modifier.padding(16.dp), fontWeight = FontWeight.Medium, color = EthosTextDark)
                     }
                 }
 
@@ -87,8 +86,8 @@ fun QuestionScreen(onVolver: () -> Unit) {
                     Button(
                         onClick = { indice++; seleccion = -1 },
                         modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = EthosGreen)
-                    ) { Text("Siguiente") }
+                        colors = ButtonDefaults.buttonColors(containerColor = EthosHeaderNavy)
+                    ) { Text("Siguiente", color = Color.White) }
                 }
             }
         }

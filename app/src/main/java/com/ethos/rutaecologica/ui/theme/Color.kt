@@ -22,6 +22,15 @@ val EthosBrown = Color(0xFF6F4E37)
 val EthosGold = Color(0xFFFFC300)
 val EthosGoldDark = Color(0xFFB8860B)
 
+// Nueva Paleta ETHOS (Flat Design)
+val EthosHeaderNavy = Color(0xFF023E55)
+val EthosPrimaryYellow = Color(0xFFF7AF02)
+val EthosSecondarySlate = Color(0xFF3B4E73)
+val EthosAccentTeal = Color(0xFF2BA5B2)
+val EthosBackground = Color(0xFFF8F9FA)
+val EthosTextDark = Color(0xFF023E55)
+val EthosTextLight = Color(0xFFFFFFFF)
+
 // Estados
 val EthosError = Color(0xFFE63946)
 val EthosSurface = Color(0xFFFFFFFF)
