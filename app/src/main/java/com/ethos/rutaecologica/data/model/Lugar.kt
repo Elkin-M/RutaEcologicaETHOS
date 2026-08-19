@@ -21,5 +21,6 @@ data class Lugar(
     val datoCurioso: String = "",
     val estadoConservacion: String = "",
     val habitat: String = "",
-    val nivel: String = ""
+    val nivel: String = "",
+    val icono: String = "" // URL de la imagen sin fondo para el pasaporte
 )

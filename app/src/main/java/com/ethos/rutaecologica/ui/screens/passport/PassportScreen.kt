@@ -1,6 +1,7 @@
 package com.ethos.rutaecologica.ui.screens.passport
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -99,17 +100,25 @@ private fun SelloCard(sello: SelloPasaporte, onClick: () -> Unit) {
         ) {
             Box(
                 modifier = Modifier
-                    .size(80.dp)
+                    .size(85.dp) // Tamaño del contenedor fijo
                     .clip(CircleShape)
-                    .background(colorFondo),
+                    .background(if (sello.visitado) EthosGreen.copy(alpha = 0.02f) else colorFondo)
+                    .border(
+                        width = 0.5.dp, // Borde mínimo para no quitar espacio
+                        color = if (sello.visitado) EthosGreen.copy(alpha = 0.2f) else Color.Transparent,
+                        shape = CircleShape
+                    ),
                 contentAlignment = Alignment.Center
             ) {
-                if (sello.visitado && sello.lugar.imagen.isNotEmpty()) {
+                // Prioridad: 1. Icono sin fondo, 2. Imagen normal
+                val imagenAMostrar = sello.lugar.icono.ifEmpty { sello.lugar.imagen }
+                
+                if (sello.visitado && imagenAMostrar.isNotEmpty()) {
                     AsyncImage(
-                        model = sello.lugar.imagen,
+                        model = imagenAMostrar,
                         contentDescription = null,
-                        modifier = Modifier.fillMaxSize().padding(12.dp),
-                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.fillMaxSize(), // Rellena el 100% del Box
+                        contentScale = ContentScale.FillBounds, // Estira para llenar el círculo
                         alpha = alphaImagen
                     )
                 } else {
@@ -169,17 +178,21 @@ fun DetalleSelloDialog(lugar: Lugar, onDismiss: () -> Unit) {
 
                 Box(
                     modifier = Modifier
-                        .size(120.dp)
+                        .size(150.dp) // Tamaño visual en el modal
                         .clip(CircleShape)
-                        .background(EthosGreenPale),
+                        .background(Color.Transparent)
+                        .border(1.dp, EthosGreen.copy(alpha = 0.1f), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (lugar.imagen.isNotEmpty()) {
+                    // Prioridad: 1. Icono sin fondo, 2. Imagen normal
+                    val imagenAMostrar = lugar.icono.ifEmpty { lugar.imagen }
+                    
+                    if (imagenAMostrar.isNotEmpty()) {
                         AsyncImage(
-                            model = lugar.imagen,
+                            model = imagenAMostrar,
                             contentDescription = null,
-                            modifier = Modifier.fillMaxSize().padding(20.dp),
-                            contentScale = ContentScale.Fit
+                            modifier = Modifier.fillMaxSize(), // Rellena el 100%
+                            contentScale = ContentScale.FillBounds // Estira para llenar
                         )
                     } else {
                         Icon(

@@ -101,8 +101,14 @@ class FirebaseRepository @Inject constructor(
      * que es la causa más común de que "todo cargue pero no reproduzca".
      * Filtra Logcat por el tag "TRACER_MEDIA" para verlo.
      */
-    private fun logDiagnosticoMultimedia(id: String, video: String, modelo3D: String) {
+    private fun logDiagnosticoMultimedia(id: String, video: String, modelo3D: String, icono: String) {
         Log.i("TRACER_MEDIA", "==================== $id ====================")
+
+        if (icono.isBlank()) {
+            Log.w("TRACER_MEDIA", "🖼️ icono: (vacío) - Revisa si el campo 'icono' existe en Firebase para este ID")
+        } else {
+            Log.i("TRACER_MEDIA", "🖼️ icono URL: $icono")
+        }
 
         if (video.isBlank()) {
             Log.i("TRACER_MEDIA", "🎬 video: (vacío, no hay video para este lugar)")
@@ -154,7 +160,9 @@ class FirebaseRepository @Inject constructor(
         // 🔎 Diagnóstico temporal: mira Logcat filtrando por "TRACER_MEDIA"
         val videoUrl = safeStr(s, "video")
         val modelo3DUrl = safeStr(s, "modelo3D")
-        logDiagnosticoMultimedia(id, videoUrl, modelo3DUrl)
+        val iconoUrl = safeStr(s, "icono")
+        
+        logDiagnosticoMultimedia(id, videoUrl, modelo3DUrl, iconoUrl)
 
         return Lugar(
             id = id,
@@ -172,7 +180,8 @@ class FirebaseRepository @Inject constructor(
             estadoConservacion = safeStr(s, "estadoConservacion"),
             habitat = safeStr(s, "habitat"),
             modelo3D = modelo3DUrl,
-            nivel = safeStr(s, "nivel")
+            nivel = safeStr(s, "nivel"),
+            icono = iconoUrl
         )
     }
 }
