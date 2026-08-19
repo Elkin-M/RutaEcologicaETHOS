@@ -15,8 +15,10 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
@@ -114,6 +116,9 @@ fun ResultScreen(
                 }
             }
 
+            // Estado para que el contenedor adapte su altura según la imagen/video
+            var mediaAspectRatio by remember { mutableFloatStateOf(1.5f) } 
+
             Box(
                 Modifier
                     .fillMaxWidth()
@@ -124,8 +129,10 @@ fun ResultScreen(
                     state = pagerState,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(220.dp)
+                        .animateContentSize() // Transición suave al cambiar de tamaño
+                        .aspectRatio(mediaAspectRatio) 
                         .clip(RoundedCornerShape(22.dp))
+                        .background(Color.Black.copy(alpha = 0.05f))
                 ) { page ->
                     when (mediaItems[page]) {
                         "IMG" -> {
@@ -133,13 +140,23 @@ fun ResultScreen(
                                 model = datos.imagen,
                                 contentDescription = datos.nombre,
                                 modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
+                                contentScale = ContentScale.Fit, 
+                                onSuccess = { state ->
+                                    val size = state.painter.intrinsicSize
+                                    if (size.width > 0 && size.height > 0) {
+                                        // Ajustar ratio dinámicamente (limite para no romper el UI)
+                                        mediaAspectRatio = (size.width / size.height).coerceIn(0.6f, 2.0f)
+                                    }
+                                }
                             )
                         }
                         "VID" -> {
                             VideoHeader(
                                 url = datos.video,
-                                modifier = Modifier.fillMaxSize()
+                                modifier = Modifier.fillMaxSize(),
+                                onVideoSizeChanged = { ratio ->
+                                    mediaAspectRatio = ratio.coerceIn(0.6f, 2.0f)
+                                }
                             )
                         }
                     }
@@ -366,7 +383,11 @@ private fun MensajeErrorVisor(titulo: String, detalle: String) {
  * Header de video usando Media3/ExoPlayer.
  */
 @Composable
-private fun VideoHeader(url: String, modifier: Modifier = Modifier) {
+private fun VideoHeader(
+    url: String, 
+    modifier: Modifier = Modifier,
+    onVideoSizeChanged: (Float) -> Unit = {}
+) {
     val context = LocalContext.current
 
     val exoPlayer = remember(url) {
@@ -379,7 +400,18 @@ private fun VideoHeader(url: String, modifier: Modifier = Modifier) {
     }
 
     DisposableEffect(exoPlayer) {
-        onDispose { exoPlayer.release() }
+        val listener = object : androidx.media3.common.Player.Listener {
+            override fun onVideoSizeChanged(videoSize: androidx.media3.common.VideoSize) {
+                if (videoSize.width > 0 && videoSize.height > 0) {
+                    onVideoSizeChanged(videoSize.width.toFloat() / videoSize.height.toFloat())
+                }
+            }
+        }
+        exoPlayer.addListener(listener)
+        onDispose { 
+            exoPlayer.removeListener(listener)
+            exoPlayer.release() 
+        }
     }
 
     AndroidView(
@@ -387,7 +419,7 @@ private fun VideoHeader(url: String, modifier: Modifier = Modifier) {
             PlayerView(ctx).apply {
                 player = exoPlayer
                 useController = true
-                resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
                 layoutParams = ViewGroup.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT

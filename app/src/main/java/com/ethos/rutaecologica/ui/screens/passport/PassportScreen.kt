@@ -1,5 +1,6 @@
 package com.ethos.rutaecologica.ui.screens.passport
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -7,8 +8,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
@@ -21,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -152,96 +156,142 @@ private fun SelloCard(sello: SelloPasaporte, onClick: () -> Unit) {
 
 @Composable
 fun DetalleSelloDialog(lugar: Lugar, onDismiss: () -> Unit) {
+    val configuration = LocalConfiguration.current
+    val screenHeight = configuration.screenHeightDp.dp
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Card(
             modifier = Modifier
-                .fillMaxWidth(0.85f)
-                .padding(16.dp),
-            shape = RoundedCornerShape(28.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+                .fillMaxWidth(0.92f)
+                // Se adapta al contenido, pero no supera el 85% de la pantalla
+                .heightIn(max = screenHeight * 0.85f)
+                .padding(vertical = 16.dp)
+                .animateContentSize(), // Transición suave al cargar la imagen
+            shape = RoundedCornerShape(32.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
             Column(
-                modifier = Modifier.padding(24.dp),
+                modifier = Modifier
+                    .padding(horizontal = 28.dp, vertical = 28.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, contentDescription = "Cerrar")
-                    }
-                }
-
-                Box(
+                // Contenedor scrolleable
+                Column(
                     modifier = Modifier
-                        .size(150.dp) // Tamaño visual en el modal
-                        .clip(CircleShape)
-                        .background(Color.Transparent)
-                        .border(1.dp, EthosGreen.copy(alpha = 0.1f), CircleShape),
-                    contentAlignment = Alignment.Center
+                        // fill = false es vital: permite que el modal sea pequeño si hay poco texto
+                        // pero weight(1f) permite que crezca y scrollee si hay mucho
+                        .weight(1f, fill = false) 
+                        .verticalScroll(rememberScrollState()),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Prioridad: 1. Icono sin fondo, 2. Imagen normal
-                    val imagenAMostrar = lugar.icono.ifEmpty { lugar.imagen }
-                    
-                    if (imagenAMostrar.isNotEmpty()) {
-                        AsyncImage(
-                            model = imagenAMostrar,
-                            contentDescription = null,
-                            modifier = Modifier.fillMaxSize(), // Rellena el 100%
-                            contentScale = ContentScale.FillBounds // Estira para llenar
-                        )
-                    } else {
-                        Icon(
-                            Icons.Filled.EmojiNature,
-                            contentDescription = null,
-                            tint = EthosGreen,
-                            modifier = Modifier.size(60.dp)
-                        )
+                    // Estado para que el contenedor del animal sea dinámico
+                    var mediaAspectRatio by remember { mutableFloatStateOf(1.2f) }
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(mediaAspectRatio)
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(EthosGreen.copy(alpha = 0.03f))
+                            .border(1.dp, EthosGreen.copy(alpha = 0.08f), RoundedCornerShape(24.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        val imagenAMostrar = lugar.icono.ifEmpty { lugar.imagen }
+                        
+                        if (imagenAMostrar.isNotEmpty()) {
+                            AsyncImage(
+                                model = imagenAMostrar,
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize().padding(12.dp),
+                                contentScale = ContentScale.Fit,
+                                onSuccess = { state ->
+                                    val size = state.painter.intrinsicSize
+                                    if (size.width > 0 && size.height > 0) {
+                                        mediaAspectRatio = (size.width / size.height).coerceIn(0.8f, 1.8f)
+                                    }
+                                }
+                            )
+                        } else {
+                            Icon(
+                                Icons.Filled.EmojiNature,
+                                contentDescription = null,
+                                tint = EthosGreen.copy(alpha = 0.5f),
+                                modifier = Modifier.size(70.dp)
+                            )
+                        }
                     }
-                }
 
-                Spacer(Modifier.height(20.dp))
+                    Spacer(Modifier.height(24.dp))
 
-                Text(
-                    text = lugar.nombre,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = EthosTextDark,
-                    textAlign = TextAlign.Center
-                )
+                    // Bloque de Títulos
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = lugar.nombre,
+                            style = MaterialTheme.typography.headlineSmall.copy(
+                                fontWeight = FontWeight.ExtraBold,
+                                letterSpacing = (-0.5).sp
+                            ),
+                            color = EthosTextDark,
+                            textAlign = TextAlign.Center
+                        )
+                        
+                        if (lugar.nombreCientifico.isNotEmpty()) {
+                            Surface(
+                                color = EthosGreen.copy(alpha = 0.1f),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.padding(top = 4.dp)
+                            ) {
+                                Text(
+                                    text = lugar.nombreCientifico,
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        fontWeight = FontWeight.Medium,
+                                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                                    ),
+                                    color = EthosGreen
+                                )
+                            }
+                        }
+                    }
 
-                if (lugar.nombreCientifico.isNotEmpty()) {
+                    Spacer(Modifier.height(16.dp))
+
+                    // Descripción
                     Text(
-                        text = lugar.nombreCientifico,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = EthosGreen,
-                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                        text = lugar.descripcion,
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            lineHeight = 22.sp,
+                            textAlign = TextAlign.Center
+                        ),
+                        color = EthosTextDark.copy(alpha = 0.7f)
                     )
+                    
+                    Spacer(Modifier.height(16.dp))
                 }
 
                 Spacer(Modifier.height(16.dp))
 
-                Text(
-                    text = lugar.descripcion,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = EthosTextDark.copy(alpha = 0.8f),
-                    textAlign = TextAlign.Center,
-                    lineHeight = 20.sp
-                )
-
-                Spacer(Modifier.height(24.dp))
-
+                // Botón siempre visible al fondo
                 Button(
                     onClick = onDismiss,
                     colors = ButtonDefaults.buttonColors(containerColor = EthosAccentTeal),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
                 ) {
-                    Text("¡Genial!", fontWeight = FontWeight.Bold)
+                    Text(
+                        "¡GENIAL!", 
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.sp
+                        )
+                    )
                 }
             }
         }
