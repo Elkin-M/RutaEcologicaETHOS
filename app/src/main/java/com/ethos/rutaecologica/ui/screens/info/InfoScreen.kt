@@ -27,7 +27,7 @@ fun InfoScreen(onVolver: () -> Unit) {
             }
         }
         Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(Icons.Filled.Park, contentDescription = null, tint = EthosAccentTeal, modifier = Modifier.size(72.dp))
+            Icon(Icons.Filled.Park, contentDescription = null, tint = EthosGreen, modifier = Modifier.size(72.dp))
             Spacer(Modifier.height(16.dp))
             Text(
                 "Ruta Ecológica ETHOS es una plataforma educativa gamificada que transforma el aprendizaje ambiental " +

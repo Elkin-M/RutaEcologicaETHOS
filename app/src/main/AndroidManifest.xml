@@ -8,7 +8,8 @@
     <application
         android:name=".RutaEcologicaApp"
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/logo_ethos"
+        android:roundIcon="@drawable/logo_ethos"
         android:label="Ruta Ecológica ETHOS"
         android:theme="@style/Theme.RutaEcologica"
         android:supportsRtl="true">

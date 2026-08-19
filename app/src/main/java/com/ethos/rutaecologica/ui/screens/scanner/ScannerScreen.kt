@@ -142,7 +142,7 @@ private fun ScannerFrameOverlay() {
         Icon(
             Icons.Filled.QrCodeScanner,
             contentDescription = null,
-            tint = EthosGold.copy(alpha = 0.9f),
+            tint = EthosPrimaryYellow.copy(alpha = 0.9f),
             modifier = Modifier.size(220.dp)
         )
     }
@@ -156,12 +156,12 @@ private fun EstadoOverlay(mensaje: String, esError: Boolean = false, onReintenta
                 modifier = Modifier.padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                if (!esError) CircularProgressIndicator(color = EthosAccentTeal)
+                if (!esError) CircularProgressIndicator(color = EthosGreen)
                 Spacer(Modifier.height(12.dp))
                 Text(mensaje, textAlign = androidx.compose.ui.text.style.TextAlign.Center, fontWeight = FontWeight.Medium, color = EthosTextDark)
                 if (esError && onReintentar != null) {
                     Spacer(Modifier.height(16.dp))
-                    Button(onClick = onReintentar, colors = ButtonDefaults.buttonColors(containerColor = EthosHeaderNavy)) { 
+                    Button(onClick = onReintentar, colors = ButtonDefaults.buttonColors(containerColor = EthosGreen)) {
                         Text("Reintentar", color = Color.White) 
                     }
                 }

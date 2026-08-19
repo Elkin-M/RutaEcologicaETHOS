@@ -64,7 +64,7 @@ fun ProfileScreen(
                     Icon(
                         if (alcanzado) Icons.Filled.CheckCircle else Icons.Filled.RadioButtonUnchecked,
                         contentDescription = null,
-                        tint = if (alcanzado) EthosAccentTeal else Color.Gray
+                        tint = if (alcanzado) EthosGreen else Color.Gray
                     )
                     Spacer(Modifier.width(12.dp))
                     Column {

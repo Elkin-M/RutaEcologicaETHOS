@@ -35,7 +35,7 @@ fun LoginScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(EthosHeaderNavy)
+            .background(EthosGreenDark)
             .padding(28.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -70,14 +70,23 @@ fun LoginScreen(
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(Modifier.padding(24.dp)) {
-                Text("¿Cómo te llamas?", fontWeight = FontWeight.Bold, color = EthosTextDark)
+                Text("¿Cómo te llamas?", fontWeight = FontWeight.Bold, color = EthosGreenDark)
                 Spacer(Modifier.height(10.dp))
                 OutlinedTextField(
                     value = nombre,
                     onValueChange = { nombre = it },
-                    placeholder = { Text("Ej. Estudiante SENA") },
+                    placeholder = { Text("Ej: Juan Lopez") },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = EthosGreen,
+                        unfocusedBorderColor = EthosGreen.copy(alpha = 0.3f),
+                        cursorColor = EthosGreen,
+                        focusedTextColor = EthosGreenDark,
+                        unfocusedTextColor = EthosGreenDark,
+                        focusedPlaceholderColor = EthosGreen.copy(alpha = 0.5f),
+                        unfocusedPlaceholderColor = EthosGreen.copy(alpha = 0.5f)
+                    )
                 )
                 Spacer(Modifier.height(16.dp))
                 Button(
@@ -88,7 +97,7 @@ fun LoginScreen(
                     },
                     modifier = Modifier.fillMaxWidth().height(50.dp),
                     shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = EthosAccentTeal)
+                    colors = ButtonDefaults.buttonColors(containerColor = EthosGreen)
                 ) {
                     Text("Comenzar mi ruta 🌱", fontWeight = FontWeight.Bold, color = Color.White)
                 }

@@ -65,9 +65,9 @@ fun QuestionScreen(onVolver: () -> Unit) {
                     val esCorrecta = i == pregunta.correctaIndex
                     val colorFondo = when {
                         seleccion == -1 -> Color.White
-                        i == seleccion && esCorrecta -> EthosAccentTeal.copy(alpha = 0.25f)
+                        i == seleccion && esCorrecta -> EthosGreen.copy(alpha = 0.25f)
                         i == seleccion && !esCorrecta -> Color(0xFFFFCDD2)
-                        esCorrecta -> EthosAccentTeal.copy(alpha = 0.15f)
+                        esCorrecta -> EthosGreen.copy(alpha = 0.15f)
                         else -> Color.White
                     }
                     Card(
@@ -86,7 +86,7 @@ fun QuestionScreen(onVolver: () -> Unit) {
                     Button(
                         onClick = { indice++; seleccion = -1 },
                         modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = EthosHeaderNavy)
+                        colors = ButtonDefaults.buttonColors(containerColor = EthosGreen)
                     ) { Text("Siguiente", color = Color.White) }
                 }
             }

@@ -232,7 +232,7 @@ fun ResultScreen(
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     modifier = Modifier.fillMaxWidth(0.7f)
                                 ) {
-                                    CircularProgressIndicator(color = EthosAccentTeal)
+                                    CircularProgressIndicator(color = EthosGreen)
                                     Spacer(Modifier.height(12.dp))
                                     Text(
                                         "Descargando modelo 3D...",
@@ -246,7 +246,7 @@ fun ResultScreen(
                                             modifier = Modifier
                                                 .fillMaxWidth()
                                                 .clip(RoundedCornerShape(50)),
-                                            color = EthosAccentTeal,
+                                            color = EthosGreen,
                                             trackColor = EthosTextDark.copy(alpha = 0.15f)
                                         )
                                     } else {
@@ -255,8 +255,8 @@ fun ResultScreen(
                                             modifier = Modifier
                                                 .fillMaxWidth()
                                                 .clip(RoundedCornerShape(50)),
-                                            color = EthosAccentTeal,
-                                            trackColor = EthosHeaderNavy.copy(alpha = 0.1f)
+                                            color = EthosGreen,
+                                            trackColor = EthosGreenDark.copy(alpha = 0.1f)
                                         )
                                         Spacer(Modifier.height(6.dp))
                                         Text(
@@ -291,7 +291,7 @@ fun ResultScreen(
                                         Icon(
                                             Icons.Filled.Fullscreen,
                                             contentDescription = "Expandir",
-                                            tint = EthosHeaderNavy.copy(alpha = 0.4f),
+                                            tint = EthosGreenDark.copy(alpha = 0.4f),
                                             modifier = Modifier.size(48.dp)
                                         )
                                     }
@@ -310,7 +310,7 @@ fun ResultScreen(
                         .fillMaxWidth()
                         .height(52.dp),
                     shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = EthosHeaderNavy),
+                    colors = ButtonDefaults.buttonColors(containerColor = EthosGreen),
                     elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
                 ) {
                     Text("Continuar", fontWeight = FontWeight.Bold, color = Color.White)
@@ -692,7 +692,7 @@ private fun Model3DViewer(archivoLocal: File, modifier: Modifier = Modifier) {
         // ya se renderizó.
         if (estado == EstadoWebView.CARGANDO) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                CircularProgressIndicator(color = EthosAccentTeal)
+                CircularProgressIndicator(color = EthosGreen)
                 Spacer(Modifier.height(8.dp))
                 Text(
                     "Cargando visor 3D...",

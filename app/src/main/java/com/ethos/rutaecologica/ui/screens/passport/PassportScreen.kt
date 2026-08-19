@@ -278,7 +278,7 @@ fun DetalleSelloDialog(lugar: Lugar, onDismiss: () -> Unit) {
                 // Botón siempre visible al fondo
                 Button(
                     onClick = onDismiss,
-                    colors = ButtonDefaults.buttonColors(containerColor = EthosAccentTeal),
+                    colors = ButtonDefaults.buttonColors(containerColor = EthosGreen),
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier
                         .fillMaxWidth()

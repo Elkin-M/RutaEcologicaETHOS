@@ -40,7 +40,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import com.ethos.rutaecologica.ui.theme.*
 
-/** Encabezado sólido azul marino, usado en Inicio, Escanear, Resultado, Pasaporte. */
+/** Encabezado sólido verde bosque, usado en Inicio, Escanear, Resultado, Pasaporte. */
 @Composable
 fun EcoHeader(
     modifier: Modifier = Modifier,
@@ -49,7 +49,7 @@ fun EcoHeader(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(EthosHeaderNavy)
+            .background(EthosGreenDark)
             .statusBarsPadding()
             .padding(horizontal = 24.dp, vertical = 28.dp),
         content = content
@@ -62,15 +62,15 @@ fun EstrellasChip(cantidad: Int, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .clip(RoundedCornerShape(50))
-            .background(EthosGold.copy(alpha = 0.18f))
+            .background(Color.Black.copy(alpha = 0.2f))
             .padding(horizontal = 14.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        Icon(Icons.Filled.Star, contentDescription = null, tint = EthosGold)
+        Icon(Icons.Filled.Star, contentDescription = null, tint = EthosPrimaryYellow)
         Text(
             "$cantidad Estrellas",
-            color = EthosGoldDark,
+            color = EthosPrimaryYellow,
             fontWeight = FontWeight.Bold,
             fontSize = 14.sp
         )
@@ -157,10 +157,10 @@ fun ProgresoNivelBar(
         progress = { animado },
         modifier = modifier
             .fillMaxWidth()
-            .height(10.dp)
+            .height(12.dp)
             .clip(RoundedCornerShape(50)),
         color = color,
-        trackColor = Color.White.copy(alpha = 0.25f)
+        trackColor = Color.White.copy(alpha = 0.2f)
     )
 }
 

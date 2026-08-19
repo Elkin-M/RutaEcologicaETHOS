@@ -6,13 +6,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 private val LightColors = lightColorScheme(
-    primary = EthosHeaderNavy,
+    primary = EthosGreenDark,
     onPrimary = Color.White,
-    primaryContainer = EthosSecondarySlate,
+    primaryContainer = EthosGreenMid,
     onPrimaryContainer = Color.White,
-    secondary = EthosAccentTeal,
+    secondary = EthosGreen,
     onSecondary = Color.White,
-    secondaryContainer = EthosAccentTeal.copy(alpha = 0.2f),
+    secondaryContainer = EthosGreen.copy(alpha = 0.2f),
     tertiary = EthosPrimaryYellow,
     background = EthosBackground,
     onBackground = EthosTextDark,
